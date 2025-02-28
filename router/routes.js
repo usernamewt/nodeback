@@ -4,5 +4,6 @@ module.exports = [
     require('./upload'),
     require('./adminRequestLog'),
     require('./role'),
-    require('./permission')
+    require('./permission'),
+    require('./chat_info'),
 ]

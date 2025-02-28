@@ -33,6 +33,21 @@ app.all("*", (req, res, next) => {
   next();
 });
 
+
+
+// 日志拦截
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+// 设置托管静态目录; 项目根目录+ public.可直接访问public文件下的文件eg:http://localhost:3000/images/url.jpg
+app.use(express.static(path.join(__dirname, "public")));
+console.log("process.env.environment:", process.env.environment);
+// if (process.env.environment && process.env.environment === "PRO") {
+//   app.use("/images", express.static(path.join("/root/images")));
+// }
+
 // jwt鉴权
 app.use(async (req, res, next) => {
   const token = req.header("authorization");
@@ -47,18 +62,6 @@ app.use(async (req, res, next) => {
     }
   }
 });
-
-// 日志拦截
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-
-// 设置托管静态目录; 项目根目录+ public.可直接访问public文件下的文件eg:http://localhost:3000/images/url.jpg
-app.use(express.static(path.join(__dirname, "public")));
-if (process.env.environment && process.env.environment === "PRO") {
-  app.use("/images", express.static(path.join("/root/images")));
-}
 
 // 校验token，获取headers⾥里里的Authorization的token，要写在路由加载之前，静态资源之后
 // 测试的时候可以注释

@@ -16,6 +16,7 @@ const {
 } = require("../utils/result");
 const moment = require("moment");
 const { getCurrentTime } = require("../utils/base");
+const ChatInfo = require("../db/model/chatInfo");
 
 let blacklist = {}; //token失效黑名单
 // 可用账号user user123
@@ -198,4 +199,62 @@ router.get("/user/getAuth", async (req, res) => {
     return res.json(fail(e));
   }
 });
+
+// 获取用户聊天列表
+router.get("/user/getChatList", async (req, res) => {
+  let token = req.headers.authorization;
+    let tokenUser = await vertoken.getToken(token);
+  try {
+    const userId = parseInt(tokenUser.id);
+    const query = `
+       SELECT 
+         u.id AS partner_id,
+        u.username AS partner_name,
+        u.avatar AS partner_avatar,
+        u.nickname AS partner_nickname,
+        latest_chat.content AS last_message,
+        latest_chat.created_time AS last_message_time
+      FROM user u
+      LEFT JOIN (
+        SELECT 
+          CASE 
+            WHEN c1.from_id = ${userId} THEN c1.to_id
+            ELSE c1.from_id
+          END AS partner_id,
+          c1.content,
+          c1.created_time
+        FROM chat_info c1
+        JOIN (
+          SELECT 
+            CASE 
+              WHEN from_id = ${userId} THEN to_id
+              ELSE from_id
+            END AS partner,
+            MAX(created_time) AS max_time
+          FROM chat_info
+          WHERE from_id = ${userId} OR to_id = ${userId}
+          GROUP BY partner
+        ) c2 ON (c1.from_id = ${userId} OR c1.to_id = ${userId})
+          AND c1.created_time = c2.max_time
+      ) latest_chat ON u.id = latest_chat.partner_id
+      WHERE u.id != ${userId}
+      ORDER BY 
+        CASE 
+          WHEN last_message_time IS NULL THEN 1
+          ELSE 0
+        END,
+        last_message_time DESC;
+    `;
+    const results = await ChatInfo.sequelize.query(query, {
+      replacements: { userId },
+      type: ChatInfo.sequelize.QueryTypes.SELECT,
+      raw: true
+    });
+
+    res.json(successWithData(results));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
 module.exports = {router,blacklist};

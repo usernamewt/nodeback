@@ -5,6 +5,7 @@
  */
 var app = require("./app");
 var http = require("http");
+const ChatInfo = require("./db/model/chatInfo");
 
 /**
  * Get port from environment and store in Express.
@@ -35,11 +36,34 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", function (socket) {
-  socket.emit("message", { hello: "world" });
-  socket.on("message", function (data) {
-    console.log(socket.cookies);
-    console.log(data);
+  socket.emit("message", { code:0,msg: "socket连接成功" });
+  socket.on('authenticate', (userId) => {
+    // 实际应用中需验证userId的合法性（如通过JWT）
+    socket.join(userId); // 加入以用户ID命名的房间
+    console.log(`用户 ${userId} 已连接`);
   });
+  socket.on("user_message",async function (data) {
+    try{
+      await ChatInfo.create({
+        from_id:data.from_id,
+        to_id:data.to_id,
+        content:data.content,
+        create_time:Date.now()
+      });
+      // socket.emit("message", { code:0,data });
+      io.to(data.to_id).emit('message', {
+        from: data.from_id,
+        message: data.content
+      });
+    } catch {
+      socket.emit("message", { code:-1,msg: "发送失败" });
+    }
+  });
+
+
+  socket.on("group_message",()=>{
+    console.log('group_message')
+  })
   socket.on('boardcast',()=>{
     io.emit('boardcast', 'boardcast')
   })
@@ -80,11 +104,9 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case "EACCES":
-      console.error(bind + " requires elevated privileges");
       process.exit(1);
       break;
     case "EADDRINUSE":
-      console.error(bind + " is already in use");
       process.exit(1);
       break;
     default:

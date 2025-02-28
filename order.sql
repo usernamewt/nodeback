@@ -4635,16 +4635,9 @@ CREATE TABLE `chat_info` (
   `type` tinyint(1) DEFAULT '1' COMMENT '消息类型',
   `is_read` tinyint(1) DEFAULT '0' COMMENT '是否已读',
   `is_delete` tinyint(1) DEFAULT '0' COMMENT '是否删除',
-  `is_top` tinyint(1) DEFAULT '0' COMMENT '是否置顶',
   `is_revoke` tinyint(1) DEFAULT '0' COMMENT '是否撤回',
   `revoke_time` datetime DEFAULT NULL COMMENT '撤回时间',
-  `revoke_id` int(11) DEFAULT NULL COMMENT '撤回人',
-  `revoke_reason` varchar(255) DEFAULT NULL COMMENT '撤回原因',
-  `is_at` tinyint(1) DEFAULT '0' COMMENT '是否@',
-  `at_user` varchar(255) DEFAULT NULL COMMENT '@的用户',
-  `at_all` tinyint(1) DEFAULT '0' COMMENT '是否@所有人',
-  `is_pin` tinyint(1) DEFAULT '0' COMMENT '是否置顶',
-  `goup_id` TINYINT(1) DEFAULT NULL COMMENT '群组id',
+  `group_id` TINYINT(1) DEFAULT NULL COMMENT '群组id',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=188 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
 

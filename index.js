@@ -6,19 +6,20 @@
 var app = require("./app");
 var http = require("http");
 const ChatInfo = require("./db/model/chatInfo");
+let vertoken = require("./token/index");
 
 /**
  * Get port from environment and store in Express.
  */
-var port = normalizePort(process.env.PORT || "3000");
+const port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
 
 /**
  * Create HTTP server.
  */
-var server = http.createServer(app);
-
-var io = require("socket.io")(server, {
+const server = http.createServer(app);
+let onlineUsers = new Map();
+let io = require("socket.io")(server, {
   cors: {
     origin: "*", // 允许所有来源的跨域请求
     methods: ["GET", "POST"], // 允许的方法，默认是所有方法
@@ -35,38 +36,68 @@ io.use(async (socket, next) => {
   }
 });
 
-io.on("connection", function (socket) {
-  socket.emit("message", { code:0,msg: "socket连接成功" });
-  socket.on('authenticate', (userId) => {
-    // 实际应用中需验证userId的合法性（如通过JWT）
-    socket.join(userId); // 加入以用户ID命名的房间
-    console.log(`用户 ${userId} 已连接`);
+io.on("connection", (socket) => {
+  let currentUserId = null;
+
+  // 用户身份验证（假设前端在连接后发送用户ID）
+  socket.on("authenticate", (userId) => {
+    let id = userId.userId;
+    currentUserId = id;
+    onlineUsers.set(id, socket.id);
   });
-  socket.on("user_message",async function (data) {
-    try{
-      await ChatInfo.create({
-        from_id:data.from_id,
-        to_id:data.to_id,
-        content:data.content,
-        create_time:Date.now()
+
+  // 处理私聊消息
+  socket.on("private_message", async ({ toUserId, message }) => {
+    if (!currentUserId) {
+      return socket.emit("error", "未验证的用户");
+    }
+    const targetSocketId = onlineUsers.get(toUserId);
+    if (targetSocketId!=undefined) {
+      try {
+      const roomId = [currentUserId, toUserId].sort().join("-");
+      socket.join(roomId);
+      socket.to(roomId).emit("new_message", {
+        code: 0,
+        from: currentUserId,
+        message,
+        timestamp: Date.now(),
       });
-      // socket.emit("message", { code:0,data });
-      io.to(data.to_id).emit('message', {
-        from: data.from_id,
-        message: data.content
-      });
-    } catch {
-      socket.emit("message", { code:-1,msg: "发送失败" });
+
+      // 或者直接发送给目标用户
+      io.to(targetSocketId).emit('new_message', {  code: 0,
+        from: currentUserId,
+        message,
+        timestamp: Date.now(), });
+
+      // 同时给自己发送消息（实现消息同步）
+      // socket.emit("new_message", {
+      //   code: 0,
+      //   from: currentUserId,
+      //   message,
+      //   timestamp: Date.now(),
+      // });
+      
+       await ChatInfo.create({
+          from_id: currentUserId,
+          to_id: toUserId,
+          content: message,
+          create_time: Date.now(),
+        });
+      } catch(e) {
+        socket.emit("new_message", { code: -1, message: "发送失败" });
+      }
+      // 创建双方专属会话（可选房间机制）
+    } else {
+      socket.emit("message",{ code: -1, message: "对方当前不在线" });
     }
   });
 
-
-  socket.on("group_message",()=>{
-    console.log('group_message')
-  })
-  socket.on('boardcast',()=>{
-    io.emit('boardcast', 'boardcast')
-  })
+  // 处理断开连接
+  socket.on("disconnect", () => {
+    if (currentUserId) {
+      onlineUsers.delete(currentUserId);
+    }
+  });
 });
 
 /**
@@ -80,7 +111,7 @@ server.on("listening", onListening);
  * Normalize a port into a number, string, or false.
  */
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  const port = parseInt(val, 10);
   if (isNaN(port)) {
     // named pipe
     return val;
@@ -118,7 +149,7 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  const addr = server.address();
+  const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   console.log("server start Listening on " + bind);
 }

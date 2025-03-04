@@ -53,11 +53,7 @@ router.post("/user/login", async (req, res) => {
 router.get("/user/logout", async (req, res) => {
   try {
     let data = req.headers.authorization;
-    console.log(data);
-    
     let verify = await vertoken.getToken(data);
-    console.log(verify);
-    
     vertoken.removeToken(verify.username,verify.id);
     return res.json(success("退出登录成功"));
   } catch (e) {

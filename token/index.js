@@ -30,8 +30,17 @@ const getToken = (token)=>{
             rej({status:401,message:'token is not exist'})
         } 
         else {
-            const virify = jwt.verify(token,'gnotgnaw');
-            res(virify)
+            try {
+                const virify = jwt.verify(token,'gnotgnaw');
+                if(virify) {
+                    res(virify)
+                }else {
+                    rej({status:401,message:'token is invalid'})
+                }
+            }
+            catch(err) {
+                rej({status:401,message:'token is invalid'})
+            }
         }
     })
 }

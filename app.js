@@ -44,9 +44,9 @@ app.use(cookieParser());
 // 设置托管静态目录; 项目根目录+ public.可直接访问public文件下的文件eg:http://localhost:3000/images/url.jpg
 app.use(express.static(path.join(__dirname, "public")));
 console.log("process.env.environment:", process.env.environment);
-// if (process.env.environment && process.env.environment === "PRO") {
-//   app.use("/images", express.static(path.join("/root/images")));
-// }
+if (process.env.environment && process.env.environment === "PRO") {
+  app.use("/images", express.static(path.join("/root/images")));
+}
 
 // jwt鉴权
 app.use(async (req, res, next) => {

@@ -97,9 +97,9 @@ router.post("/user/getByPage", async (req, res) => {
   const limit = req.body.pageSize;
   let offset = (page - 1) * limit;
   let where = {};
-  if (req.body.username) {
-    where["username"] = {
-      [Op.like]: `%${req.body.username}%`,
+  if (req.body.nickname) {
+    where["nickname"] = {
+      [Op.like]: `%${req.body.nickname}%`,
     };
   }
   try {

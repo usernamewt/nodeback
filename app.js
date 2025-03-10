@@ -1,3 +1,4 @@
+const cors = require('cors');
 let createError = require("http-errors");
 let express = require("express");
 let path = require("node:path");
@@ -9,15 +10,19 @@ let moment = require("moment");
 const routes = require("./router/routes");
 const AdminRequestLog = require("./db/model/adminRequestLogModel");
 const { getClientIp } = require("./utils/base");
-
+// app.use(cors({
+//   origin: 'http://47.120.49.37:8080' // 允许来自 localhost:3000 的请求
+// }));
 // let mine = require('mime')
 
 // 跨域
 app.all("*", (req, res, next) => {
   try {
-    res.header("Access-Control-Allow-Origin","*");
+      res.header("Access-Control-Allow-Origin", "http://47.120.49.37:8080");
+    res.header("Access-Control-Allow-Credentials",true);
     res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
     res.header("Access-Control-Expose-Headers", "Authorization");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     if (req.url.includes("/images")) {
       res.header("Content-Type", mime.getType(req.url));
     } else if (req.url.includes("/apidoc/")) {
@@ -125,6 +130,7 @@ app.use(function (req, res, next) {
 
 // token失效返回信息
 app.use(function (err, req, res, next) {
+    console.log(req)
   console.log("=====================》err:",err);
   try {
     if (err.status === 401) {

@@ -1,4 +1,4 @@
-const cors = require('cors');
+const cors = require("cors");
 let createError = require("http-errors");
 let express = require("express");
 let path = require("node:path");
@@ -17,9 +17,19 @@ const { getClientIp } = require("./utils/base");
 
 // 跨域
 app.all("*", (req, res, next) => {
+  const allowedOrigins = [
+    "http://47.120.49.37:8080",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "http://localhost:8082",
+    "http://localhost:8000"
+  ];
   try {
-      res.header("Access-Control-Allow-Origin", "http://47.120.49.37:8080");
-    res.header("Access-Control-Allow-Credentials",true);
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", `${origin}`);
+    }
+    res.header("Access-Control-Allow-Credentials", true);
     res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
     res.header("Access-Control-Expose-Headers", "Authorization");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -37,8 +47,6 @@ app.all("*", (req, res, next) => {
   }
   next();
 });
-
-
 
 // 日志拦截
 
@@ -77,7 +85,8 @@ app.use(
       "/user/register",
       "/config/queryValueByKey",
       "/checkHealth",
-      "/user/logout"
+      "/user/logout",
+      "/api/upload"
     ],
   })
 );
@@ -130,8 +139,8 @@ app.use(function (req, res, next) {
 
 // token失效返回信息
 app.use(function (err, req, res, next) {
-    console.log(req)
-  console.log("=====================》err:",err);
+  console.log(req.file);
+  console.log("=====================》err:", err);
   try {
     if (err.status === 401) {
       return res.json({ code: 401, message: "token Invalid" });

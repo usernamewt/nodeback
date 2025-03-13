@@ -13,10 +13,10 @@ function successWrong(data){
   }
 }
 
-function success() {
+function success(value) {
   return {
     code: 0,
-    msg: "success",
+    msg: value?value:"success",
   };
 }
 

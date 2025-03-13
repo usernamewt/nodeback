@@ -27,6 +27,9 @@ const User = sequelize.define("user",{
     },
     mobile:{
         type:DataTypes.STRING
+    },
+    bgavatar:{
+        type:DataTypes.STRING
     }
 })
 

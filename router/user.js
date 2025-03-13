@@ -7,7 +7,7 @@ const Permission = require("../db/model/permissionModel");
 let md5 = require("md5-node");
 let vertoken = require("../token/index");
 const { getTree } = require("../utils/base");
-let { Op } = require("sequelize");
+let { Op, where } = require("sequelize");
 const {
   fail,
   success,
@@ -66,7 +66,7 @@ router.get("/user/logout", async (req, res) => {
  */
 router.post("/user/add", async (req, res) => {
   try {
-    let { username, password, avatar, mobile, nickname, state, role_id } =
+    let { username, password, avatar, mobile, nickname, state, role_id,bgavatar } =
       req.body;
     let user = await User.findOne({ where: { username } });
     if (user) {
@@ -82,6 +82,7 @@ router.post("/user/add", async (req, res) => {
       nickname,
       state,
       role_id,
+      bgavatar,
       create_time: time,
       updated_time: time,
     });
@@ -90,6 +91,80 @@ router.post("/user/add", async (req, res) => {
     return res.json(fail(e));
   }
 });
+/**
+ * 删除用户
+ */
+router.post("/user/delete", async (req, res) => {
+  try {
+    let { id } = req.body;
+    let user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.json(successWrong("用户不存在"));
+    }
+    await User.destroy({ where: { id } });
+    return res.json(success("删除用户成功"));
+  } catch (e) {
+    return res.json(fail(e));
+  }
+})
+/**
+ * 修改用户
+ */
+router.post("/user/update", async (req, res) => {
+  try {
+    let { id, mobile, nickname, state, role_id,bgavatar } =
+      req.body;
+    let user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.json(successWrong("用户不存在"));
+    }
+    let updated_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    console.log(mobile, nickname, state, role_id,updated_time,bgavatar);
+    
+    let userUpdate = { mobile, nickname, state, role_id,updated_time,bgavatar };
+    await User.update(userUpdate,{where:{id}})
+    return res.json(success("修改用户成功"));
+  }
+  catch (e) {
+    return res.json(fail(e));
+  }
+})
+/**
+ * 修改用户头像
+ */
+router.post("/user/updateAvatar", async (req, res) => {
+  try {
+    let { id, avatar } = req.body;
+    let user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.json(successWrong("用户不存在"));
+    }
+    let updated_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    let userUpdate = { avatar,updated_time };
+    await User.update(userUpdate,{where:{id}})
+    return res.json(success("修改用户头像成功"));
+  }
+  catch (e) {
+    return res.json(fail(e));
+  }
+})
+/**
+ * 修改密码
+ */
+router.post("/user/updatePassword", async (req, res) => {
+  try {
+    let { id, password } = req.body;
+    let user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.json(successWrong("用户不存在"));
+    }
+    password = md5(password + user.username);
+    await User.update({ password }, { where: { id } });
+    return res.json(success("修改密码成功"));
+  } catch (e) {
+    return res.json(fail(e));
+  }
+})
 
 // 分页查询用户
 router.post("/user/getByPage", async (req, res) => {
@@ -107,7 +182,7 @@ router.post("/user/getByPage", async (req, res) => {
       where,
       offset,
       limit,
-      order: [["created_time", "desc"]],
+      order: [["id", "asc"]],
     });
     return res.json(successWithData(resule));
   } catch (e) {
@@ -152,6 +227,7 @@ router.get("/user/getAuth", async (req, res) => {
         "nickname",
         "state",
         "role_id",
+        "bgavatar"
       ],
     });
     if (!user) {
@@ -207,6 +283,7 @@ router.get("/user/getChatList", async (req, res) => {
          u.id AS partner_id,
         u.username AS partner_name,
         u.avatar AS partner_avatar,
+        u.bgavatar AS partner_bgavatar,
         u.nickname AS partner_nickname,
         latest_chat.content AS last_message,
         latest_chat.created_time AS last_message_time

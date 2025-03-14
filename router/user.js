@@ -170,14 +170,38 @@ router.post("/user/updatePassword", async (req, res) => {
 router.post("/user/getByPage", async (req, res) => {
   const page = req.body.currentPage;
   const limit = req.body.pageSize;
+  console.log(req.body);
+  
   let offset = (page - 1) * limit;
   let where = {};
   if (req.body.nickname) {
-    where["nickname"] = {
-      [Op.like]: `%${req.body.nickname}%`,
+    where["nickname"]= {
+        [Op.like]: `%${req.body.nickname}%`,
     };
   }
+  if(req.body.username){
+    where["username"]= {
+        [Op.like]: `%${req.body.username}%`,
+    };
+  }
+  if(req.body.mobile){
+    where["mobile"]= {
+        [Op.like]: `%${req.body.mobile}%`,
+    };
+  }
+  if(req.body.state!=undefined){
+    where["state"]= {[Op.eq]: req.body.state};
+  }
+  if(req.body.created_time){
+    const targetDay = new Date(req.body.created_time);
+    const startOfDay = new Date(targetDay.setHours(0, 0, 0, 0)); // 当天开始时间
+    const endOfDay = new Date(targetDay.setHours(23, 59, 59, 999)); // 当天结束时间
+    where["created_time"]= {
+      [Op.gte]: startOfDay, // 大于等于当天开始时间
+      [Op.lt]: endOfDay, 
+  }}
   try {
+    console.log(where);
     const resule = await User.findAndCountAll({
       where,
       offset,

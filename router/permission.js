@@ -147,16 +147,16 @@ router.post("/permission/queryByRole", async (req, res) => {
     // 遍历所有权限，如果
     allData.forEach((permission) => {
       if (permission_ids_arr.indexOf(permission.id) != -1) {
-        if (permission.subs && permission.subs.length > 0) {
-          permission.subs.forEach((two) => {
+        if (permission.children && permission.children.length > 0) {
+          permission.children.forEach((two) => {
             if (permission_ids_arr.indexOf(two.id) == -1) {
               // 需要删除父级，因为不是全选
               if (clearIds.indexOf(permission.id) == -1) {
                 clearIds.push(permission.id);
               }
             } else {
-              if (two.subs && two.subs.length > 0) {
-                two.subs.forEach((third) => {
+              if (two.children && two.children.length > 0) {
+                two.children.forEach((third) => {
                   if (permission_ids_arr.indexOf(third.id) == -1) {
                     // 需要删除二级，因为不是全选
                     if (clearIds.indexOf(two.id) == -1) {

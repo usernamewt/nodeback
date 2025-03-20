@@ -16,6 +16,7 @@ function checkParam(req){
 function getTree(fid, arr, res) {
     for (let i = 0; i < arr.length; i++) {
         if (arr[i].fid == fid) {
+            arr[i].key = arr[i].id
             res.push(arr[i])
             //res.push({index: arr[i].path,title:arr[i].name,icon:arr[i].icon,fid:arr[i].fid})
             arr.splice(i, 1)
@@ -23,10 +24,10 @@ function getTree(fid, arr, res) {
         }
     }
     res.map(r => {
-        r.subs = []
-        getTree(r.id, arr, r.subs)
-        if (r.subs.length == 0) {
-            delete r.subs
+        r.children = []
+        getTree(r.id, arr, r.children)
+        if (r.children.length == 0) {
+            delete r.children
         }
     })
     return res

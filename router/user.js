@@ -7,7 +7,7 @@ const Permission = require("../db/model/permissionModel");
 let md5 = require("md5-node");
 let vertoken = require("../token/index");
 const { getTree } = require("../utils/base");
-let { Op, where } = require("sequelize");
+let { Op } = require("sequelize");
 const {
   fail,
   success,
@@ -54,20 +54,28 @@ router.get("/user/logout", async (req, res) => {
   try {
     let data = req.headers.authorization;
     let verify = await vertoken.getToken(data);
-    vertoken.removeToken(verify.username,verify.id);
+    vertoken.removeToken(verify.username, verify.id);
     return res.json(success("退出登录成功"));
   } catch (e) {
     return res.json(fail(e));
   }
-})
+});
 
 /**
  * 新增用户
  */
 router.post("/user/add", async (req, res) => {
   try {
-    let { username, password, avatar, mobile, nickname, state, role_id,bgavatar } =
-      req.body;
+    let {
+      username,
+      password,
+      avatar,
+      mobile,
+      nickname,
+      state,
+      role_id,
+      bgavatar,
+    } = req.body;
     let user = await User.findOne({ where: { username } });
     if (user) {
       return res.json(successWrong("用户名已存在"));
@@ -106,29 +114,52 @@ router.post("/user/delete", async (req, res) => {
   } catch (e) {
     return res.json(fail(e));
   }
-})
+});
 /**
  * 修改用户
  */
 router.post("/user/update", async (req, res) => {
   try {
-    let { id, mobile, nickname, state, role_id,bgavatar } =
-      req.body;
+    let { id, mobile, nickname, state, role_id, bgavatar } = req.body;
     let user = await User.findOne({ where: { id } });
     if (!user) {
       return res.json(successWrong("用户不存在"));
     }
     let updated_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
-    console.log(mobile, nickname, state, role_id,updated_time,bgavatar);
-    
-    let userUpdate = { mobile, nickname, state, role_id,updated_time,bgavatar };
-    await User.update(userUpdate,{where:{id}})
+    console.log(mobile, nickname, state, role_id, updated_time, bgavatar);
+    role_id = role_id.toString();
+    let userUpdate = {
+      mobile,
+      nickname,
+      state,
+      role_id,
+      updated_time,
+      bgavatar,
+    };
+    await User.update(userUpdate, { where: { id } });
     return res.json(success("修改用户成功"));
-  }
-  catch (e) {
+  } catch (e) {
     return res.json(fail(e));
   }
-})
+});
+
+/**
+ * 修改用户状态
+ */
+router.post("/user/updateState", async (req, res) => {
+  try {
+    let { id, state } = req.body;
+    let user = await User.findOne({ where: { id } });
+    if (!user) {
+      return res.json(successWrong("用户不存在"));
+    }
+    let updated_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    await User.update({ state, updated_time }, { where: { id } });
+    return res.json(success("修改用户状态成功"));
+  } catch (e) {
+    return res.json(fail(e));
+  }
+});
 /**
  * 修改用户头像
  */
@@ -140,14 +171,13 @@ router.post("/user/updateAvatar", async (req, res) => {
       return res.json(successWrong("用户不存在"));
     }
     let updated_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
-    let userUpdate = { avatar,updated_time };
-    await User.update(userUpdate,{where:{id}})
+    let userUpdate = { avatar, updated_time };
+    await User.update(userUpdate, { where: { id } });
     return res.json(success("修改用户头像成功"));
-  }
-  catch (e) {
+  } catch (e) {
     return res.json(fail(e));
   }
-})
+});
 /**
  * 修改密码
  */
@@ -164,49 +194,63 @@ router.post("/user/updatePassword", async (req, res) => {
   } catch (e) {
     return res.json(fail(e));
   }
-})
+});
 
 // 分页查询用户
 router.post("/user/getByPage", async (req, res) => {
   const page = req.body.currentPage;
   const limit = req.body.pageSize;
   console.log(req.body);
-  
+
   let offset = (page - 1) * limit;
   let where = {};
   if (req.body.nickname) {
-    where["nickname"]= {
-        [Op.like]: `%${req.body.nickname}%`,
+    where["nickname"] = {
+      [Op.like]: `%${req.body.nickname}%`,
     };
   }
-  if(req.body.username){
-    where["username"]= {
-        [Op.like]: `%${req.body.username}%`,
+  if (req.body.username) {
+    where["username"] = {
+      [Op.like]: `%${req.body.username}%`,
     };
   }
-  if(req.body.mobile){
-    where["mobile"]= {
-        [Op.like]: `%${req.body.mobile}%`,
+  if (req.body.mobile) {
+    where["mobile"] = {
+      [Op.like]: `%${req.body.mobile}%`,
     };
   }
-  if(req.body.state!=undefined){
-    where["state"]= {[Op.eq]: req.body.state};
+  if (req.body.state != undefined) {
+    where["state"] = { [Op.eq]: req.body.state };
   }
-  if(req.body.created_time){
+  if (req.body.created_time) {
     const targetDay = new Date(req.body.created_time);
     const startOfDay = new Date(targetDay.setHours(0, 0, 0, 0)); // 当天开始时间
     const endOfDay = new Date(targetDay.setHours(23, 59, 59, 999)); // 当天结束时间
-    where["created_time"]= {
+    where["created_time"] = {
       [Op.gte]: startOfDay, // 大于等于当天开始时间
-      [Op.lt]: endOfDay, 
-  }}
+      [Op.lt]: endOfDay,
+    };
+  }
   try {
-    console.log(where);
     const resule = await User.findAndCountAll({
       where,
       offset,
       limit,
       order: [["id", "asc"]],
+    });
+    resule.rows = resule.rows.map((item) => {
+      return {
+        avatar: item.avatar,
+        bgavatar: item.bgavatar,
+        created_time: item.created_time,
+        id: item.id,
+        mobile: item.mobile,
+        nickname: item.nickname,
+        role_id: item.role_id.split(","),
+        state: item.state,
+        updated_time: item.updated_time,
+        username: item.username,
+      };
     });
     return res.json(successWithData(resule));
   } catch (e) {
@@ -251,27 +295,38 @@ router.get("/user/getAuth", async (req, res) => {
         "nickname",
         "state",
         "role_id",
-        "bgavatar"
+        "bgavatar",
       ],
     });
     if (!user) {
       return res.json(successWrong("用户不存在"));
     }
-    let role = await Role.findOne({
-      where: { id: user.role_id },
+    // 获取多个角色
+    let role = await Role.findAll({
+      where: {
+        id: {
+          [Op.in]: user.role_id.split(","),
+        },
+        state: { [Op.eq]: 1 },
+      },
       attributes: ["id", "permission_ids"],
     });
     if (!role) {
       return res.json(successWrong("角色不存在"));
     }
-    let permission_ids = role.permission_ids.split(",");
+    // 获取多角色
+    let permission_ids = "";
+    role.forEach((item) => {
+      console.log(item.dataValues.permission_ids);
+      permission_ids += item.dataValues.permission_ids + ",";
+    });
+    permission_ids = permission_ids.split(",");
     let permissions = await Permission.findAll({
       where: { id: { [Op.in]: permission_ids } },
     });
     permissions = permissions.map((item) => {
       return item.dataValues;
     });
-
     if (!permissions) {
       return res.json(successWrong("权限不存在"));
     }
@@ -289,8 +344,7 @@ router.get("/user/getAuth", async (req, res) => {
       };
     });
     getTree(0, formData, data);
-
-    return res.json(successWithData({ user, role, permissions:data }));
+    return res.json(successWithData({ user, role, permissions: data }));
   } catch (e) {
     return res.json(fail(e));
   }
@@ -299,7 +353,7 @@ router.get("/user/getAuth", async (req, res) => {
 // 获取用户聊天列表
 router.get("/user/getChatList", async (req, res) => {
   let token = req.headers.authorization;
-    let tokenUser = await vertoken.getToken(token);
+  let tokenUser = await vertoken.getToken(token);
   try {
     const userId = parseInt(tokenUser.id);
     const query = `
@@ -345,13 +399,13 @@ router.get("/user/getChatList", async (req, res) => {
     const results = await ChatInfo.sequelize.query(query, {
       replacements: { userId },
       type: ChatInfo.sequelize.QueryTypes.SELECT,
-      raw: true
+      raw: true,
     });
 
     res.json(successWithData(results));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
-})
-module.exports = {router,blacklist};
+});
+module.exports = { router, blacklist };

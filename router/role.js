@@ -2,7 +2,13 @@ const express = require("express");
 const router = express.Router();
 const Role = require("../db/model/roleModel");
 const { getCurrentTime } = require("../utils/base");
-const { fail, success, successWithData,successWrong } = require("../utils/result");
+const {
+  fail,
+  success,
+  successWithData,
+  successWrong,
+} = require("../utils/result");
+const { Op } = require("sequelize");
 
 // 添加角色
 router.post("/role/addRole", async (req, res) => {
@@ -63,6 +69,30 @@ router.post("/role/editRole", async (req, res) => {
   }
 });
 
+// 编辑角色状态
+router.post("/role/editRoleState", async (req, res) => {
+  let id = req.body.id;
+  let state = req.body.state;
+  if (!id) {
+    return res.json(successWrong("id不能为空"));
+  }
+  try {
+    let role = await Role.findOne({ where: { id } });
+    if (!role) {
+      return res.json(successWrong("角色不存在"));
+    }
+    let roleupdated = await Role.update(
+      { state: state },
+      { where: { id: id } }
+    );
+    if (roleupdated) {
+      return res.json(success("修改成功"));
+    }
+  } catch (e) {
+    return res.json(fail(e));
+  }
+});
+
 // 删除角色
 router.post("/role/delRole", async (req, res) => {
   let id = req.body.id;
@@ -86,13 +116,31 @@ router.post("/role/delRole", async (req, res) => {
 // 设置role权限
 // 分页查询role列表
 router.post("/role/getRoleList", async (req, res) => {
-  let { currentPage, pageSize, role_name } = req.body;
+  let { currentPage, pageSize, role_name, desc, state, created_time } =
+    req.body;
   let limit = pageSize;
   let offset = (currentPage - 1) * pageSize;
   let where = {};
   if (role_name) {
     where["role_name"] = {
       [Op.like]: `%${role_name}%`,
+    };
+  }
+  if (desc) {
+    where["desc"] = {
+      [Op.like]: `%${desc}%`,
+    };
+  }
+  if (state != undefined) {
+    where["state"] = state;
+  }
+  if (created_time) {
+    const targetDay = new Date(created_time);
+    const startOfDay = new Date(targetDay.setHours(0, 0, 0, 0)); // 当天开始时间
+    const endOfDay = new Date(targetDay.setHours(23, 59, 59, 999)); // 当天结束时间
+    where["created_time"] = {
+      [Op.gte]: startOfDay, // 大于等于当天开始时间
+      [Op.lt]: endOfDay,
     };
   }
   try {

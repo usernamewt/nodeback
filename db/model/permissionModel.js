@@ -1,3 +1,4 @@
+const Role = require("./roleModel")
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize");
 const Permission = sequelize.define("permission", {
@@ -32,5 +33,4 @@ const Permission = sequelize.define("permission", {
     type: DataTypes.STRING,
   },
 });
-
 module.exports = Permission;

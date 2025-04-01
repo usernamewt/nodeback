@@ -82,6 +82,7 @@ router.post("/user/add", async (req, res) => {
     }
     password = md5(password + username);
     let time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    role_id = role_id.toString();
     await User.create({
       username,
       password,
@@ -335,12 +336,20 @@ router.get("/user/getAuth", async (req, res) => {
     let formData = permissions.map((o) => {
       return {
         id: o.id,
-        index: o.index,
         title: o.title,
-        icon: o.icon,
         fid: o.fid,
         component: o.component,
         level: o.level,
+        checkIcon: o.icondef,
+        ckeckedIcon: o.iconact,
+        perms: o.perms,
+        mark: o.mark,
+        level: o.level,
+        isFrame: o.isFrame,
+        path: o.path,
+        is_hidden: o.is_hidden,
+        state: o.state,
+        sort: o.sort,
       };
     });
     getTree(0, formData, data);

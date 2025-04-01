@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const User = require("../db/model/userModel");
 const Role = require("../db/model/roleModel");
 const Permission = require("../db/model/permissionModel");
-const { successWithData, fail } = require("../utils/result");
+const { success, fail, successWithData } = require("../utils/result");
 const { getTree } = require("../utils/base");
 
 // 添加权限
@@ -15,10 +15,33 @@ router.post("/permission/add", (req, res) => {
       create_time: Date.now(),
       updated_time: Date.now(),
     }).then((data) => {
-      res.json(successWithData(data, "添加成功"));
+      res.json(success("添加成功"));
     });
   } catch (error) {
     res.json(fail(error, "添加失败"));
+  }
+});
+// 更新权限
+router.post("/permission/update", (req, res) => {
+  if (!req.body.id) {
+    return res.json(fail(null, "权限id为空"));
+  }
+  try {
+    Permission.update(
+      {
+        ...req.body,
+        updated_time: Date.now(),
+      },
+      {
+        where: {
+          id: req.body.id,
+        },
+      }
+    ).then(() => {
+      res.json(success("更新成功"));
+    });
+  } catch (error) {
+    res.json(fail(error, "更新失败"));
   }
 });
 
@@ -28,8 +51,8 @@ router.post("/permission/delete", (req, res) => {
     return res.json(fail(null, "缺少参数"));
   }
   try {
-    Permission.destroy({ where: { id: req.body.id } }).then((data) => {
-      res.json(successWithData(data, "删除成功"));
+    Permission.destroy({ where: { id: req.body.id } }).then(() => {
+      res.json(success("删除成功"));
     });
   } catch (error) {
     res.json(fail(error, "删除失败"));
@@ -189,20 +212,18 @@ router.post("/permission/queryByRole", async (req, res) => {
 
 // 查询所有权限
 router.get("/permission/all", async (req, res) => {
-    try{
-        let result = await Permission.findAll();
-        if (!result || result.length == 0) {
-            return res.json({code:-1,msg:"没有权限"});
-        }
-        let data = [];
-        let resData = result.map((o) => o.dataValues);
-        getTree(0, resData, data);
-        return res.json(successWithData(data));
-
+  try {
+    let result = await Permission.findAll();
+    if (!result || result.length == 0) {
+      return res.json({ code: -1, msg: "没有权限" });
     }
-    catch (err) {
-        return res.json(fail(err));
-    }
-})
+    let data = [];
+    let resData = result.map((o) => o.dataValues);
+    getTree(0, resData, data);
+    return res.json(successWithData(data));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
 
 module.exports = router;

@@ -1,0 +1,128 @@
+const express = require("express");
+const router = express.Router();
+const Goods = require("../db/model/goods");
+const moment = require("moment");
+const {
+  fail,
+  success,
+  successWithData,
+  successWrong,
+} = require("../utils/result");
+const { Op } = require("sequelize");
+// 分页查询所有商品
+router.post("/goods/getAll", async (req, res) => {
+  const { currentPage, pageSize, keyword } = req.body;
+  const offset = (currentPage - 1) * pageSize;
+  const where = {};
+  if (keyword) {
+    where.product_name = {
+      [Op.like]: `%${keyword}%`,
+    };
+  }
+  try {
+    const goods = await Goods.findAndCountAll({
+      where,
+      offset,
+      limit: parseInt(pageSize),
+      order: [["id", "DESC"]],
+    });
+    return res.json(successWithData(goods));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
+// 添加商品
+router.post("/goods/add", async (req, res) => {
+  const {
+    product_name,
+    detail,
+    is_hot,
+    sale_price,
+    original_price,
+    head_img,
+    carousel_img,
+    cate_id,
+    status,
+    stock,
+    version,
+    description,
+  } = req.body;
+  console.log(req.body);
+
+  try {
+    const goods = await Goods.create({
+      product_name,
+      detail,
+      is_hot,
+      sale_price,
+      original_price,
+      head_img,
+      carousel_img,
+      cate_id,
+      status,
+      stock,
+      version,
+      description,
+      created_time: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      updated_time: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+    });
+    if (goods) {
+      return res.json(success("添加商品成功"));
+    }
+    return res.json(fail("添加商品失败"));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
+// 编辑商品
+router.post("/goods/edit", async (req, res) => {
+  const {
+    id,
+    product_name,
+    detail,
+    is_hot,
+    sale_price,
+    original_price,
+    head_img,
+    carousel_img,
+    cate_id,
+    status,
+    stock,
+    version,
+    description,
+  } = req.body;
+  if (!id) {
+    return res.json(successWrong("缺少id"));
+  }
+  try {
+    const goods = await Goods.update(
+      {
+        product_name,
+        detail,
+        is_hot,
+        sale_price,
+        original_price,
+        head_img,
+        carousel_img,
+        cate_id,
+        status,
+        stock,
+        version,
+        description,
+        updated_time: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      },
+      {
+        where: {
+          id,
+        },
+      }
+    );
+    return res.json(success("编辑商品成功"));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
+module.exports = router;

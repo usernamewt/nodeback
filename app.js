@@ -86,6 +86,7 @@ app.use(
       "/checkHealth",
       "/user/logout",
       "/api/upload",
+      "/nav/getAll",
     ],
   })
 );

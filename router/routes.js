@@ -8,4 +8,5 @@ module.exports = [
   require("./chat_info"),
   require("./goods"),
   require("./classification"),
+  require("./nav-config"),
 ];

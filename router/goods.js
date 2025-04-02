@@ -32,6 +32,31 @@ router.post("/goods/getAll", async (req, res) => {
   }
 });
 
+// 查询所有上架商品
+router.post("/goods/getOnSale", async (req, res) => {
+  const { currentPage, pageSize, keyword } = req.body;
+  const offset = (currentPage - 1) * pageSize;
+  const where = {
+    status: 1,
+  };
+  if (keyword) {
+    where.product_name = {
+      [Op.like]: `%${keyword}%`,
+    };
+    where.status = 1;
+  }
+  try {
+    const goods = await Goods.findAndCountAll({
+      where,
+      offset,
+      limit: parseInt(pageSize),
+    });
+    return res.json(successWithData(goods));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
 // 添加商品
 router.post("/goods/add", async (req, res) => {
   const {
@@ -120,6 +145,47 @@ router.post("/goods/edit", async (req, res) => {
       }
     );
     return res.json(success("编辑商品成功"));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+// 删除商品
+router.post("/goods/delete", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.json(successWrong("缺少id"));
+  }
+  try {
+    const goods = await Goods.destroy({
+      where: {
+        id,
+      },
+    });
+    return res.json(success("删除商品成功"));
+  } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
+// 上/下架商品
+router.post("/goods/changeStatus", async (req, res) => {
+  const { id, status } = req.body;
+  if (!id) {
+    return res.json(successWrong("缺少id"));
+  }
+  try {
+    await Goods.update(
+      {
+        status,
+        updated_time: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      },
+      {
+        where: {
+          id,
+        },
+      }
+    );
+    return res.json(success("操作成功"));
   } catch (err) {
     return res.json(fail(err));
   }

@@ -56,11 +56,9 @@ const Product = sequelize.define("product", {
     type: DataTypes.STRING,
   },
 });
-Product.associate = () => {
-  // 多对一关联：belongsTo
-  Product.belongsTo(Classification, {
-    foreignKey: "cate_id",
-    targetKey: "id",
-  });
-};
+// 多对一关联：belongsTo
+Product.belongsTo(Classification, {
+  foreignKey: "cate_id",
+  targetKey: "id",
+});
 module.exports = Product;

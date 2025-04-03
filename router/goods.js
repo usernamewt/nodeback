@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Goods = require("../db/model/goods");
+const Product = require("../db/model/goods");
+const chat = require("../db/model/chatInfo");
 const Classification = require("../db/model/classification");
 const moment = require("moment");
 const {
@@ -21,7 +22,7 @@ router.post("/goods/getAll", async (req, res) => {
     };
   }
   try {
-    const goods = await Goods.findAndCountAll({
+    const goods = await Product.findAndCountAll({
       where,
       offset,
       limit: parseInt(pageSize),
@@ -47,7 +48,7 @@ router.post("/goods/getOnSale", async (req, res) => {
     where.status = 1;
   }
   try {
-    const goods = await Goods.findAndCountAll({
+    const goods = await Product.findAndCountAll({
       where,
       offset,
       limit: parseInt(pageSize),
@@ -77,7 +78,7 @@ router.post("/goods/add", async (req, res) => {
   console.log(req.body);
 
   try {
-    const goods = await Goods.create({
+    const goods = await Product.create({
       product_name,
       detail,
       is_hot,
@@ -123,7 +124,7 @@ router.post("/goods/edit", async (req, res) => {
     return res.json(successWrong("缺少id"));
   }
   try {
-    const goods = await Goods.update(
+    const goods = await Product.update(
       {
         product_name,
         detail,
@@ -157,7 +158,7 @@ router.post("/goods/delete", async (req, res) => {
     return res.json(successWrong("缺少id"));
   }
   try {
-    const goods = await Goods.destroy({
+    const goods = await Product.destroy({
       where: {
         id,
       },
@@ -175,7 +176,7 @@ router.post("/goods/changeStatus", async (req, res) => {
     return res.json(successWrong("缺少id"));
   }
   try {
-    await Goods.update(
+    await Product.update(
       {
         status,
         updated_time: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
@@ -195,13 +196,13 @@ router.post("/goods/changeStatus", async (req, res) => {
 // 根据所有分类返回分类下5条商品
 router.post("/goods/getByCate", async (req, res) => {
   try {
-    const hasBelongsToMany = Goods.associations;
+    const hasBelongsToMany = Product.associations;
     console.dir(hasBelongsToMany);
 
-    const goods = await Classification.findAll({
+    const goods = await Product.findAll({
       include: [
         {
-          model: Goods,
+          model: Classification,
           where: { price: { [Op.gt]: 100 } }, // 可选条件
           limit: 5, //
         },

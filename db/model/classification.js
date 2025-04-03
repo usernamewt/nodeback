@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize");
+const Goods = require("../model/goods");
 const Classification = sequelize.define("classification", {
   id: {
     type: DataTypes.INTEGER,

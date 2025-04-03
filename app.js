@@ -87,6 +87,7 @@ app.use(
       "/user/logout",
       "/api/upload",
       "/nav/getAll",
+      "/goods/getByCate",
     ],
   })
 );

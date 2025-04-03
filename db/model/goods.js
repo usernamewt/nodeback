@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize");
-const Goods = sequelize.define("product", {
+const Classific = require("../model/classification");
+const Classification = require("../model/classification");
+const Product = sequelize.define("product", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -30,6 +32,10 @@ const Goods = sequelize.define("product", {
   },
   cate_id: {
     type: DataTypes.INTEGER,
+    // references: {
+    //   model: "classification", // 关联表名
+    //   key: "id", // 关联字段
+    // },
   },
   status: {
     type: DataTypes.INTEGER,
@@ -50,4 +56,11 @@ const Goods = sequelize.define("product", {
     type: DataTypes.STRING,
   },
 });
-module.exports = Goods;
+Product.associate = () => {
+  // 多对一关联：belongsTo
+  Product.belongsTo(Classification, {
+    foreignKey: "cate_id",
+    targetKey: "id",
+  });
+};
+module.exports = Product;

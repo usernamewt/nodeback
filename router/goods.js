@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Goods = require("../db/model/goods");
+const Classification = require("../db/model/classification");
 const moment = require("moment");
 const {
   fail,
@@ -187,6 +188,30 @@ router.post("/goods/changeStatus", async (req, res) => {
     );
     return res.json(success("操作成功"));
   } catch (err) {
+    return res.json(fail(err));
+  }
+});
+
+// 根据所有分类返回分类下5条商品
+router.post("/goods/getByCate", async (req, res) => {
+  try {
+    const hasBelongsToMany = Goods.associations;
+    console.dir(hasBelongsToMany);
+
+    const goods = await Classification.findAll({
+      include: [
+        {
+          model: Goods,
+          where: { price: { [Op.gt]: 100 } }, // 可选条件
+          limit: 5, //
+        },
+      ],
+    });
+
+    return res.json(successWithData(goods));
+  } catch (err) {
+    console.log(err);
+
     return res.json(fail(err));
   }
 });

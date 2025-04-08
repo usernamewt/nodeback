@@ -1,6 +1,7 @@
 // 用户路由
 let express = require("express");
 let router = express.Router();
+let axios = require("axios");
 const User = require("../db/model/userModel");
 const Role = require("../db/model/roleModel");
 const Permission = require("../db/model/permissionModel");
@@ -45,6 +46,18 @@ router.post("/user/login", async (req, res) => {
   } else {
     return res.json(successWrong("密码错误"));
   }
+});
+
+// 微信小程序用户登录
+router.post("/user/wxlogin", async (req, res) => {
+  const { code } = req.query;
+  const { userInfo } = req.body;
+  const appid = "xxxxx";
+  const secretid = "xxxxxx";
+  const { data } = await axios.get(
+    `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secretid}&js_code=${code}&grant_type=authorization_code`
+  );
+  const token = jwt.sign(data, jwtSecretKey);
 });
 
 /**

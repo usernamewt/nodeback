@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sequelize");
-const Classific = require("../model/classification");
 const Classification = require("../model/classification");
 const Product = sequelize.define("product", {
   id: {
@@ -55,10 +54,5 @@ const Product = sequelize.define("product", {
   description: {
     type: DataTypes.STRING,
   },
-});
-// 多对一关联：belongsTo
-Product.belongsTo(Classification, {
-  foreignKey: "cate_id",
-  targetKey: "id",
 });
 module.exports = Product;

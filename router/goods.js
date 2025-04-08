@@ -196,23 +196,36 @@ router.post("/goods/changeStatus", async (req, res) => {
 // 根据所有分类返回分类下5条商品
 router.post("/goods/getByCate", async (req, res) => {
   try {
-    const hasBelongsToMany = Product.associations;
-    console.dir(hasBelongsToMany);
-
     const goods = await Product.findAll({
+      order: [["sale_price", "DESC"]],
       include: [
         {
-          model: Classification,
-          where: { price: { [Op.gt]: 100 } }, // 可选条件
-          limit: 5, //
+          association: Product.belongsTo(Classification, {
+            foreignKey: "cate_id",
+          }),
         },
       ],
     });
-
     return res.json(successWithData(goods));
   } catch (err) {
-    console.log(err);
+    return res.json(fail(err));
+  }
+});
 
+// 根据id返回商品详情
+router.post("/goods/getById", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.json(successWrong("缺少id"));
+  }
+  try {
+    const goods = await Product.findOne({
+      where: {
+        id,
+      },
+    });
+    return res.json(successWithData(goods));
+  } catch (err) {
     return res.json(fail(err));
   }
 });

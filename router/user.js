@@ -6,6 +6,7 @@ const User = require("../db/model/userModel");
 const Role = require("../db/model/roleModel");
 const Permission = require("../db/model/permissionModel");
 let md5 = require("md5-node");
+let wxconfig = require("../enum/wx");
 let vertoken = require("../token/index");
 const { getTree } = require("../utils/base");
 let { Op } = require("sequelize");
@@ -50,14 +51,25 @@ router.post("/user/login", async (req, res) => {
 
 // 微信小程序用户登录
 router.post("/user/wxlogin", async (req, res) => {
-  const { code } = req.query;
-  const { userInfo } = req.body;
-  const appid = "xxxxx";
-  const secretid = "xxxxxx";
+  const { code } = req.body;
+  const appid = wxconfig.appid;
+  const secretid = wxconfig.secretid;
   const { data } = await axios.get(
-    `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secretid}&js_code=${code}&grant_type=authorization_code`
+    `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secretid}&js_code=${code}`
   );
-  const token = jwt.sign(data, jwtSecretKey);
+  const token = await vertoken.setToken(data.openid, data.session_key);
+  if (data) {
+    return res.json(successWithData(token));
+  } else {
+    return res.json(successWrong("登录失败"));
+  }
+  // TODO:
+  // 1. 根据openid查询数据库，判断用户是否存在
+});
+
+// 微信小程序注册
+router.post("/user/wxregister", async (req, res) => {
+  const { phone } = req.body;
 });
 
 /**

@@ -88,6 +88,7 @@ app.use(
       "/api/upload",
       "/nav/getAll",
       "/goods/getByCate",
+      "/user/wxlogin",
     ],
   })
 );

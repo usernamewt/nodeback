@@ -54,39 +54,39 @@ io.on("connection", (socket) => {
     const targetSocketId = onlineUsers.get(toUserId);
     if (targetSocketId!=undefined) {
       try {
-      const roomId = [currentUserId, toUserId].sort().join("-");
-      socket.join(roomId);
-      socket.to(roomId).emit("new_message", {
-        code: 0,
-        from: currentUserId,
-        message,
-        timestamp: Date.now(),
-      });
+        // 生成唯一的消息ID
+        const messageId = `${currentUserId}_${toUserId}_${Date.now()}`;
+        
+        // 创建消息对象
+        const messageData = {
+          code: 0,
+          from: currentUserId,
+          message,
+          timestamp: Date.now(),
+          id: messageId
+        };
 
-      // 或者直接发送给目标用户
-      io.to(targetSocketId).emit('new_message', {  code: 0,
-        from: currentUserId,
-        message,
-        timestamp: Date.now(), });
-
-      // 同时给自己发送消息（实现消息同步）
-      // socket.emit("new_message", {
-      //   code: 0,
-      //   from: currentUserId,
-      //   message,
-      //   timestamp: Date.now(),
-      // });
+        // 发送给目标用户
+        io.to(targetSocketId).emit('new_message', messageData);
+        
+        // 发送给发送者自己（用于确认消息已发送）
+        socket.emit('new_message', {
+          ...messageData,
+          isUser: true
+        });
       
-       await ChatInfo.create({
+        // 保存到数据库
+        await ChatInfo.create({
           from_id: currentUserId,
           to_id: toUserId,
           content: message,
           create_time: Date.now(),
+          message_id: messageId
         });
       } catch(e) {
+        console.error('消息发送错误:', e);
         socket.emit("new_message", { code: -1, message: "发送失败" });
       }
-      // 创建双方专属会话（可选房间机制）
     } else {
       socket.emit("message",{ code: -1, message: "对方当前不在线" });
     }

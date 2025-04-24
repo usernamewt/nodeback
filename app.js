@@ -75,7 +75,7 @@ app.use(async (req, res, next) => {
   }
 });
 
-// 校验token，获取headers⾥里里的Authorization的token，要写在路由加载之前，静态资源之后
+// 校验token，获取headers的Authorization的token，要写在路由加载之前，静态资源之后
 // 测试的时候可以注释
 app.use(
   expressJwt({ secret: "gnotgnaw", algorithms: ["HS256"] }).unless({

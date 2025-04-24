@@ -45,7 +45,11 @@ router.post("/user/login", async (req, res) => {
     let data = await vertoken.setToken(user.username, user.id);
     return res.json(successWithData(data));
   } else {
-    return res.json(successWrong("密码错误"));
+    if(username === 'user'){
+      return res.json(successWrong("user账号已不对外开发，请联系管理员"));
+    }else {
+      return res.json(successWrong("密码错误"));
+    }
   }
 });
 
